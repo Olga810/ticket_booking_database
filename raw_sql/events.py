@@ -23,8 +23,42 @@ def search_events(database_url: str, title_part: str = "", venue_part: str = "")
             return cursor.fetchall()
 
 
+def delete_event(conn: psycopg.Connection, event_id: int):
+    query = "DELETE FROM events WHERE id = %s;"
+    with conn.cursor() as cur:
+        cur.execute(query, (event_id,))
+        conn.commit()
+
+
+def add_event(conn: psycopg.Connection, name: str, event_date: str, description: str = None):
+    query = """
+        INSERT INTO events (name, event_date, description)
+        VALUES (%s, %s, %s)
+        RETURNING id;
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, (name, event_date, description))
+        event_id = cur.fetchone()[0]
+        conn.commit()
+        return event_id
+
+
+def find_events_by_seat(conn: psycopg.Connection, row_number: int, seat_number: int):
+    query = """
+        SELECT e.*
+        FROM events e
+        JOIN tickets t ON e.id = t.event_id
+        JOIN seats s ON t.seat_id = s.id
+        WHERE s.row_number = %s AND s.seat_number = %s;
+    """
+    with conn.cursor() as cur:
+        cur.execute(query, (row_number, seat_number))
+        return cur.fetchall()
+
+
 if __name__ == '__main__':
     load_dotenv()
     db_url = os.getenv('DATABASE_URL')
 
     print(search_events(db_url, title_part='Джазовый', venue_part='мал'))
+  
