@@ -47,8 +47,7 @@ def find_events_by_seat(conn: psycopg.Connection, row_number: int, seat_number: 
     query = """
         SELECT e.*
         FROM events e
-        JOIN tickets t ON e.id = t.event_id
-        JOIN seats s ON t.seat_id = s.id
+        JOIN seats s ON t.seat_id = s.event_id
         WHERE s.row_number = %s AND s.seat_number = %s;
     """
     with conn.cursor() as cur:
